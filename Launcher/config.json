@@ -325,7 +325,12 @@
     "intrinio-password": "",
 
     "ema-fast": 10,
-    "ema-slow": 20
+    "ema-slow": 20,
+  "ticker": "SPY",
+  "start-date": "2025-10-07",
+  "end-date": "2026-05-05",
+  "cash": 100000,
+  "resolution": "Minute"
   },
 
   // specify supported languages when running regression tests

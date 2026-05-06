@@ -570,6 +570,17 @@
             activeRunState = status.status;
             statusLabel.textContent = status.status;
             statusMessage.textContent = status.message || "";
+
+             if (status.status === "running") {
+                setFeedback("Lean is running.");
+            } else if (status.status === "building") {
+                setFeedback("Building Lean...");
+            } else if (status.status === "succeeded") {
+                setFeedback("Backtest completed successfully.");
+            } else if (status.status === "failed") {
+                setFeedback(status.message || "Backtest failed.", true);
+            }
+
             setBusy(false);
         }
 
