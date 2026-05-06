@@ -1,0 +1,3 @@
+2026-05-06T13:21:04.0978890Z TRACE:: Engine.Main(): LEAN ALGORITHMIC TRADING ENGINE v2.5.0.0 Mode: DEBUG (64bit) Host: docker-desktop
+2026-05-06T13:21:04.1023708Z TRACE:: Engine.Main(): Started 1:21 PM
+2026-05-06T13:21:04.1244168Z TRACE:: JobQueue.NextJob(): Selected QuantConnect.Algorithm.CSharp.dll
