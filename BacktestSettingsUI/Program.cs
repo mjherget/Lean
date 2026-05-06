@@ -15,6 +15,7 @@ namespace QuantConnect.Lean.BacktestSettingsUI
 
             builder.Services.AddSingleton<LeanBacktestPaths>();
             builder.Services.AddSingleton<LeanConfigFileService>();
+            builder.Services.AddSingleton<LeanResultFileService>();
             builder.Services.AddSingleton<IProcessRunner, SystemProcessRunner>();
             builder.Services.AddSingleton<LeanRunService>();
 
@@ -58,6 +59,11 @@ namespace QuantConnect.Lean.BacktestSettingsUI
             app.MapGet("/api/run-status", (LeanRunService runService) =>
             {
                 return Results.Ok(runService.GetStatus());
+            });
+
+            app.MapGet("/api/results/latest", (LeanResultFileService resultFileService) =>
+            {
+                return Results.Ok(resultFileService.LoadLatest());
             });
 
             app.MapFallbackToFile("index.html");

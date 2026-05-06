@@ -220,6 +220,140 @@
             padding-left: 18px;
         }
 
+        .results-panel {
+            margin-top: 28px;
+        }
+
+        .results-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: end;
+            margin-bottom: 18px;
+        }
+
+        .results-head h2,
+        .results-block h3 {
+            margin: 0;
+        }
+
+        .results-meta {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .results-empty {
+            border-radius: 18px;
+            border: 1px dashed var(--border);
+            background: #f7f2e8;
+            padding: 18px;
+            color: var(--muted);
+        }
+
+        .results-content {
+            display: grid;
+            gap: 22px;
+        }
+
+        .results-block {
+            display: grid;
+            gap: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .stat-card {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 14px 16px;
+            background: #fffcf6;
+        }
+
+        .stat-card .label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            display: block;
+            font-size: 1.05rem;
+            line-height: 1.35;
+        }
+
+        .chart-shell {
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(11, 110, 79, 0.08), rgba(255, 255, 255, 0.92));
+            padding: 16px;
+        }
+
+        .chart-summary {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .chart-frame {
+            width: 100%;
+            height: 260px;
+            display: block;
+        }
+
+        .chart-axis {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 0.86rem;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            overflow: hidden;
+            background: #fffcf6;
+        }
+
+        .orders-table th,
+        .orders-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+            vertical-align: top;
+        }
+
+        .orders-table th {
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            background: #f3efe5;
+        }
+
+        .orders-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .mono {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+
         @media (max-width: 760px) {
             .shell {
                 padding-top: 32px;
@@ -303,6 +437,60 @@
                 </div>
             </form>
         </section>
+
+        <section class="panel results-panel">
+            <div class="results-head">
+                <div>
+                    <h2>Latest Backtest</h2>
+                    <div id="resultsMeta" class="results-meta">Looking for local Lean results...</div>
+                </div>
+            </div>
+
+            <div id="resultsEmpty" class="results-empty">
+                Run a backtest from this screen and the results will appear here.
+            </div>
+
+            <div id="resultsContent" class="results-content" hidden>
+                <section class="results-block">
+                    <h3>Summary Statistics</h3>
+                    <div id="statisticsGrid" class="stats-grid"></div>
+                </section>
+
+                <section class="results-block">
+                    <h3>Runtime Snapshot</h3>
+                    <div id="runtimeStatisticsGrid" class="stats-grid"></div>
+                </section>
+
+                <section class="results-block">
+                    <h3>Equity Curve</h3>
+                    <div class="chart-shell">
+                        <div id="chartSummary" class="chart-summary"></div>
+                        <svg id="equityChart" class="chart-frame" viewBox="0 0 760 260" preserveAspectRatio="none" aria-label="Equity curve"></svg>
+                        <div class="chart-axis">
+                            <span id="chartStartLabel"></span>
+                            <span id="chartEndLabel"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="results-block">
+                    <h3>Recent Order Events</h3>
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Symbol</th>
+                                <th>Status</th>
+                                <th>Direction</th>
+                                <th>Fill</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody"></tbody>
+                    </table>
+                </section>
+            </div>
+        </section>
     </main>
 
     <script>
@@ -314,6 +502,16 @@
         const statusMessage = document.getElementById("statusMessage");
         const saveButton = document.getElementById("saveButton");
         const runButton = document.getElementById("runButton");
+        const resultsMeta = document.getElementById("resultsMeta");
+        const resultsEmpty = document.getElementById("resultsEmpty");
+        const resultsContent = document.getElementById("resultsContent");
+        const statisticsGrid = document.getElementById("statisticsGrid");
+        const runtimeStatisticsGrid = document.getElementById("runtimeStatisticsGrid");
+        const chartSummary = document.getElementById("chartSummary");
+        const equityChart = document.getElementById("equityChart");
+        const chartStartLabel = document.getElementById("chartStartLabel");
+        const chartEndLabel = document.getElementById("chartEndLabel");
+        const ordersTableBody = document.getElementById("ordersTableBody");
         const statusPollIntervalMs = 1500;
 
         let activeRunState = "idle";
@@ -375,6 +573,188 @@
             setBusy(false);
         }
 
+        function renderMetricCards(container, items, emptyMessage) {
+            container.replaceChildren();
+
+            if (!items || items.length === 0) {
+                const emptyCard = document.createElement("div");
+                emptyCard.className = "stat-card";
+                const value = document.createElement("span");
+                value.className = "value";
+                value.textContent = emptyMessage;
+                emptyCard.appendChild(value);
+                container.appendChild(emptyCard);
+                return;
+            }
+
+            for (const item of items) {
+                const card = document.createElement("div");
+                card.className = "stat-card";
+
+                const label = document.createElement("span");
+                label.className = "label";
+                label.textContent = item.label;
+
+                const value = document.createElement("span");
+                value.className = "value";
+                value.textContent = item.value;
+
+                card.append(label, value);
+                container.appendChild(card);
+            }
+        }
+
+        function formatTimestamp(value) {
+            if (!value) {
+                return "";
+            }
+
+            const date = new Date(value);
+            if (Number.isNaN(date.valueOf())) {
+                return value;
+            }
+
+            return new Intl.DateTimeFormat(undefined, {
+                dateStyle: "medium",
+                timeStyle: "short"
+            }).format(date);
+        }
+
+        function formatMoney(value) {
+            return new Intl.NumberFormat(undefined, {
+                style: "currency",
+                currency: "USD",
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        function renderChart(points) {
+            equityChart.replaceChildren();
+
+            if (!points || points.length === 0) {
+                chartSummary.textContent = "No equity samples were saved for this backtest yet.";
+                chartStartLabel.textContent = "";
+                chartEndLabel.textContent = "";
+                return;
+            }
+
+            const width = 760;
+            const height = 260;
+            const padding = { top: 18, right: 18, bottom: 24, left: 18 };
+            const values = points.map(point => Number(point.value));
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            const span = max - min || Math.max(Math.abs(max) * 0.02, 1);
+            const baseline = min - span * 0.08;
+            const ceiling = max + span * 0.08;
+            const xStep = points.length === 1 ? 0 : (width - padding.left - padding.right) / (points.length - 1);
+
+            const lineCoordinates = points.map((point, index) => {
+                const x = padding.left + (xStep * index);
+                const yRatio = (Number(point.value) - baseline) / (ceiling - baseline);
+                const y = height - padding.bottom - (yRatio * (height - padding.top - padding.bottom));
+                return `${x},${y}`;
+            });
+
+            const areaCoordinates = [
+                `${padding.left},${height - padding.bottom}`,
+                ...lineCoordinates,
+                `${width - padding.right},${height - padding.bottom}`
+            ].join(" ");
+
+            const area = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            area.setAttribute("points", areaCoordinates);
+            area.setAttribute("fill", "rgba(11, 110, 79, 0.12)");
+
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+            line.setAttribute("points", lineCoordinates.join(" "));
+            line.setAttribute("fill", "none");
+            line.setAttribute("stroke", "#0b6e4f");
+            line.setAttribute("stroke-width", "3");
+            line.setAttribute("stroke-linecap", "round");
+            line.setAttribute("stroke-linejoin", "round");
+
+            const firstPoint = points[0];
+            const lastPoint = points[points.length - 1];
+            const change = Number(lastPoint.value) - Number(firstPoint.value);
+            const percentChange = Number(firstPoint.value) === 0 ? 0 : (change / Number(firstPoint.value)) * 100;
+
+            chartSummary.textContent = `${formatMoney(Number(firstPoint.value))} to ${formatMoney(Number(lastPoint.value))} (${percentChange >= 0 ? "+" : ""}${percentChange.toFixed(2)}%)`;
+            chartStartLabel.textContent = formatTimestamp(firstPoint.time);
+            chartEndLabel.textContent = formatTimestamp(lastPoint.time);
+
+            equityChart.append(area, line);
+        }
+
+        function renderOrders(orders) {
+            ordersTableBody.replaceChildren();
+
+            if (!orders || orders.length === 0) {
+                const row = document.createElement("tr");
+                const cell = document.createElement("td");
+                cell.colSpan = 6;
+                cell.textContent = "No order events were written for this backtest.";
+                row.appendChild(cell);
+                ordersTableBody.appendChild(row);
+                return;
+            }
+
+            for (const order of orders) {
+                const row = document.createElement("tr");
+                const fillText = order.fillQuantity && order.fillPrice
+                    ? `${order.fillQuantity} @ ${formatMoney(Number(order.fillPrice))}`
+                    : order.fillQuantity
+                        ? `${order.fillQuantity}`
+                        : "";
+                const values = [
+                    formatTimestamp(order.time),
+                    order.symbol || "",
+                    order.status || "",
+                    order.direction || "",
+                    fillText,
+                    order.message || ""
+                ];
+
+                for (const value of values) {
+                    const cell = document.createElement("td");
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                }
+
+                ordersTableBody.appendChild(row);
+            }
+        }
+
+        function renderResults(results) {
+            const sourceDirectory = results.sourceDirectory
+                ? `Stored in ${results.sourceDirectory}`
+                : "";
+
+            if (!results.hasResults) {
+                resultsMeta.textContent = sourceDirectory || "No local Lean results found yet.";
+                resultsEmpty.textContent = results.message || "Run a backtest from this screen and the results will appear here.";
+                resultsEmpty.hidden = false;
+                resultsContent.hidden = true;
+                statisticsGrid.replaceChildren();
+                runtimeStatisticsGrid.replaceChildren();
+                chartSummary.textContent = "";
+                equityChart.replaceChildren();
+                chartStartLabel.textContent = "";
+                chartEndLabel.textContent = "";
+                ordersTableBody.replaceChildren();
+                return;
+            }
+
+            resultsMeta.textContent = `${results.algorithmName} · ${formatTimestamp(results.generatedAtUtc)} · ${sourceDirectory}`;
+            resultsEmpty.hidden = true;
+            resultsContent.hidden = false;
+
+            renderMetricCards(statisticsGrid, results.statistics, "No summary statistics found.");
+            renderMetricCards(runtimeStatisticsGrid, results.runtimeStatistics, "No runtime snapshot found.");
+            renderChart(results.equitySeries);
+            renderOrders(results.recentOrders);
+        }
+
         async function fetchJson(url, options) {
             const response = await fetch(url, options);
             const body = await response.json().catch(() => null);
@@ -392,6 +772,11 @@
         async function loadStatus() {
             const status = await fetchJson("/api/run-status");
             renderStatus(status);
+        }
+
+        async function loadResults() {
+            const results = await fetchJson("/api/results/latest");
+            renderResults(results);
         }
 
         async function saveSettings() {
@@ -448,9 +833,12 @@
             await runBacktest();
         });
 
-        setInterval(loadStatus, statusPollIntervalMs);
+        setInterval(() => {
+            loadStatus().catch(() => {});
+            loadResults().catch(() => {});
+        }, statusPollIntervalMs);
 
-        Promise.all([loadSettings(), loadStatus()]).catch(() => {
+        Promise.all([loadSettings(), loadStatus(), loadResults()]).catch(() => {
             setFeedback("Unable to load the Lean settings UI.", true);
         });
     </script>
