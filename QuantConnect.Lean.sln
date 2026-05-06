@@ -5,6 +5,8 @@ VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 15.0.0.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Lean.Launcher", "Launcher\QuantConnect.Lean.Launcher.csproj", "{09E7B916-E58B-4021-BD8B-C10B4446E226}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Lean.BacktestSettingsUI", "BacktestSettingsUI\QuantConnect.Lean.BacktestSettingsUI.csproj", "{B410D6CC-FB0E-42B2-9011-88A7884249C8}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuantConnect.Lean.Engine", "Engine\QuantConnect.Lean.Engine.csproj", "{12156F46-D07E-4E3D-AD2B-7409E82AB62F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C5D44209-49A0-4505-A870-043C5EF5FDDF} = {C5D44209-49A0-4505-A870-043C5EF5FDDF}
@@ -66,6 +68,10 @@ Global
 		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{09E7B916-E58B-4021-BD8B-C10B4446E226}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B410D6CC-FB0E-42B2-9011-88A7884249C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B410D6CC-FB0E-42B2-9011-88A7884249C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B410D6CC-FB0E-42B2-9011-88A7884249C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B410D6CC-FB0E-42B2-9011-88A7884249C8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{12156F46-D07E-4E3D-AD2B-7409E82AB62F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{12156F46-D07E-4E3D-AD2B-7409E82AB62F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12156F46-D07E-4E3D-AD2B-7409E82AB62F}.Release|Any CPU.ActiveCfg = Release|Any CPU

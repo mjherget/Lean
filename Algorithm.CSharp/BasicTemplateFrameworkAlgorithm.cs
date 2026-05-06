@@ -38,12 +38,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            // Set requested data resolution
-            UniverseSettings.Resolution = Resolution.Minute;
+            var backtestSettings = BasicTemplateFrameworkSettings.FromParameters(GetParameters(), Debug);
 
-            SetStartDate(2013, 10, 07);  //Set Start Date
-            SetEndDate(2013, 10, 11);    //Set End Date
-            SetCash(100000);             //Set Strategy Cash
+            // Set requested data resolution
+            UniverseSettings.Resolution = backtestSettings.Resolution;
+
+            SetStartDate(backtestSettings.StartDate);  //Set Start Date
+            SetEndDate(backtestSettings.EndDate);      //Set End Date
+            SetCash(backtestSettings.Cash);            //Set Strategy Cash
 
             // Find more symbols here: http://quantconnect.com/data
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
@@ -51,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             // Options Resolution: Minute Only.
 
             // set algorithm framework models
-            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
+            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create(backtestSettings.Ticker, SecurityType.Equity, Market.USA)));
             SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
 
             // We can define who often the EWPCM will rebalance if no new insight is submitted using:

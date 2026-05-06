@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lean Backtest Settings</title>
+    <style>
+        :root {
+            --bg: #f6f2e8;
+            --panel: #fffdfa;
+            --ink: #1f2933;
+            --muted: #52606d;
+            --accent: #0b6e4f;
+            --accent-strong: #084c38;
+            --border: #d9d1c0;
+            --danger: #b42318;
+            --shadow: 0 20px 45px rgba(31, 41, 51, 0.10);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(11, 110, 79, 0.15), transparent 30%),
+                linear-gradient(180deg, #f8f5ec 0%, #efe8d8 100%);
+            min-height: 100vh;
+        }
+
+        .shell {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 48px 20px 64px;
+        }
+
+        .hero {
+            margin-bottom: 28px;
+        }
+
+        .eyebrow {
+            font-size: 0.8rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: clamp(2.4rem, 6vw, 4.5rem);
+            line-height: 0.95;
+            margin: 0 0 12px;
+        }
+
+        .subhead {
+            max-width: 680px;
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .panel {
+            background: color-mix(in srgb, var(--panel) 92%, white);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            padding: 28px;
+            backdrop-filter: blur(8px);
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: start;
+            margin-bottom: 22px;
+        }
+
+        .panel-head h2 {
+            margin: 0 0 6px;
+            font-size: 1.6rem;
+        }
+
+        .panel-head p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .status-badge {
+            min-width: 170px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: #f3efe5;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        .status-badge strong {
+            display: block;
+            margin-bottom: 4px;
+            text-transform: capitalize;
+        }
+
+        form {
+            display: grid;
+            gap: 18px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field label {
+            font-size: 0.92rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+
+        .field input,
+        .field select {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: white;
+            padding: 14px 16px;
+            font: inherit;
+            color: var(--ink);
+        }
+
+        .field input:focus,
+        .field select:focus {
+            outline: 2px solid rgba(11, 110, 79, 0.18);
+            border-color: var(--accent);
+        }
+
+        .algorithm {
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: #f3efe5;
+            border: 1px dashed var(--border);
+            font-size: 0.98rem;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        button {
+            border: none;
+            border-radius: 999px;
+            padding: 14px 22px;
+            font: inherit;
+            cursor: pointer;
+            transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .primary:hover:not(:disabled) {
+            background: var(--accent-strong);
+        }
+
+        .secondary {
+            background: #ece6d8;
+            color: var(--ink);
+        }
+
+        .feedback {
+            min-height: 24px;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .feedback.error {
+            color: var(--danger);
+        }
+
+        .errors {
+            display: none;
+            border-radius: 18px;
+            padding: 14px 16px;
+            background: #fef3f2;
+            color: var(--danger);
+            border: 1px solid rgba(180, 35, 24, 0.18);
+        }
+
+        .errors.visible {
+            display: block;
+        }
+
+        .errors ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        @media (max-width: 760px) {
+            .shell {
+                padding-top: 32px;
+            }
+
+            .panel {
+                padding: 22px;
+            }
+
+            .panel-head {
+                flex-direction: column;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="hero">
+            <div class="eyebrow">Lean Local Control Room</div>
+            <h1>Shape the backtest without touching the source.</h1>
+            <p class="subhead">Update the active algorithm's core stock-analysis inputs, save them into <code>Launcher/config.json</code>, and launch Lean from the same screen.</p>
+        </section>
+
+        <section class="panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Backtest Settings</h2>
+                    <p>The current algorithm is fixed in Lean config for this first version.</p>
+                </div>
+                <div class="status-badge">
+                    <strong id="statusLabel">Idle</strong>
+                    <span id="statusMessage">No backtest has been run yet.</span>
+                </div>
+            </div>
+
+            <form id="settingsForm">
+                <div class="field">
+                    <label for="algorithmName">Algorithm</label>
+                    <div class="algorithm" id="algorithmName">Loading...</div>
+                </div>
+
+                <div class="grid">
+                    <div class="field">
+                        <label for="ticker">Ticker</label>
+                        <input id="ticker" name="ticker" type="text" autocomplete="off" placeholder="AAPL">
+                    </div>
+                    <div class="field">
+                        <label for="resolution">Resolution</label>
+                        <select id="resolution" name="resolution">
+                            <option value="Daily">Daily</option>
+                            <option value="Hour">Hour</option>
+                            <option value="Minute">Minute</option>
+                            <option value="Second">Second</option>
+                            <option value="Tick">Tick</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="startDate">Start Date</label>
+                        <input id="startDate" name="startDate" type="date">
+                    </div>
+                    <div class="field">
+                        <label for="endDate">End Date</label>
+                        <input id="endDate" name="endDate" type="date">
+                    </div>
+                    <div class="field">
+                        <label for="cash">Cash</label>
+                        <input id="cash" name="cash" type="number" step="0.01" min="0.01">
+                    </div>
+                </div>
+
+                <div id="errorBox" class="errors"></div>
+                <div id="feedback" class="feedback"></div>
+
+                <div class="actions">
+                    <button id="saveButton" class="secondary" type="submit">Save</button>
+                    <button id="runButton" class="primary" type="button">Save and Run</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const form = document.getElementById("settingsForm");
+        const algorithmName = document.getElementById("algorithmName");
+        const feedback = document.getElementById("feedback");
+        const errorBox = document.getElementById("errorBox");
+        const statusLabel = document.getElementById("statusLabel");
+        const statusMessage = document.getElementById("statusMessage");
+        const saveButton = document.getElementById("saveButton");
+        const runButton = document.getElementById("runButton");
+        const statusPollIntervalMs = 1500;
+
+        let activeRunState = "idle";
+
+        function payloadFromForm() {
+            return {
+                ticker: document.getElementById("ticker").value,
+                startDate: document.getElementById("startDate").value,
+                endDate: document.getElementById("endDate").value,
+                cash: document.getElementById("cash").value,
+                resolution: document.getElementById("resolution").value
+            };
+        }
+
+        function setBusy(isBusy) {
+            const disableRun = isBusy || activeRunState === "building" || activeRunState === "running";
+            saveButton.disabled = isBusy;
+            runButton.disabled = disableRun;
+        }
+
+        function setFeedback(message, isError = false) {
+            feedback.textContent = message || "";
+            feedback.classList.toggle("error", Boolean(isError));
+        }
+
+        function renderErrors(problem) {
+            const messages = [];
+            if (problem && problem.errors) {
+                for (const entries of Object.values(problem.errors)) {
+                    for (const message of entries) {
+                        messages.push(message);
+                    }
+                }
+            }
+
+            if (messages.length === 0) {
+                errorBox.classList.remove("visible");
+                errorBox.innerHTML = "";
+                return;
+            }
+
+            errorBox.classList.add("visible");
+            errorBox.innerHTML = `<ul>${messages.map(message => `<li>${message}</li>`).join("")}</ul>`;
+        }
+
+        function renderSettings(settings) {
+            algorithmName.textContent = settings.algorithmName || "Unknown algorithm";
+            document.getElementById("ticker").value = settings.ticker;
+            document.getElementById("startDate").value = settings.startDate;
+            document.getElementById("endDate").value = settings.endDate;
+            document.getElementById("cash").value = settings.cash;
+            document.getElementById("resolution").value = settings.resolution;
+        }
+
+        function renderStatus(status) {
+            activeRunState = status.status;
+            statusLabel.textContent = status.status;
+            statusMessage.textContent = status.message || "";
+            setBusy(false);
+        }
+
+        async function fetchJson(url, options) {
+            const response = await fetch(url, options);
+            const body = await response.json().catch(() => null);
+            if (!response.ok) {
+                throw { response, body };
+            }
+            return body;
+        }
+
+        async function loadSettings() {
+            const settings = await fetchJson("/api/settings");
+            renderSettings(settings);
+        }
+
+        async function loadStatus() {
+            const status = await fetchJson("/api/run-status");
+            renderStatus(status);
+        }
+
+        async function saveSettings() {
+            setBusy(true);
+            setFeedback("Saving settings...");
+            renderErrors(null);
+
+            try {
+                const settings = await fetchJson("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payloadFromForm())
+                });
+                renderSettings(settings);
+                setFeedback("Settings saved.");
+            } catch (error) {
+                renderErrors(error.body);
+                setFeedback("Unable to save settings.", true);
+            } finally {
+                setBusy(false);
+            }
+        }
+
+        async function runBacktest() {
+            setBusy(true);
+            setFeedback("Saving settings and starting Lean...");
+            renderErrors(null);
+
+            try {
+                const status = await fetchJson("/api/run", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payloadFromForm())
+                });
+                renderStatus(status);
+                setFeedback("Lean is running.");
+            } catch (error) {
+                renderErrors(error.body);
+                const message = error.response && error.response.status === 409
+                    ? "Another backtest is already running."
+                    : "Unable to start Lean.";
+                setFeedback(message, true);
+            } finally {
+                setBusy(false);
+            }
+        }
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            await saveSettings();
+        });
+
+        runButton.addEventListener("click", async () => {
+            await runBacktest();
+        });
+
+        setInterval(loadStatus, statusPollIntervalMs);
+
+        Promise.all([loadSettings(), loadStatus()]).catch(() => {
+            setFeedback("Unable to load the Lean settings UI.", true);
+        });
+    </script>
+</body>
+</html>
