@@ -1,5 +1,8 @@
 {
     "files.eol": "\n",
+    "files.associations": {
+        "Launcher/config.json": "jsonc"
+    },
     "files.exclude": {
         "**/bin": true,
         "**/obj": true,
