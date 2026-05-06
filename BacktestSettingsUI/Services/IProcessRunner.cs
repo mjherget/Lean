@@ -6,7 +6,13 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
 {
     public interface IProcessRunner
     {
-        Task<int> RunAsync(ProcessSpecification specification, CancellationToken cancellationToken);
+        IManagedProcess Start(ProcessSpecification specification);
+    }
+
+    public interface IManagedProcess
+    {
+        Task<int> WaitForExitAsync(CancellationToken cancellationToken);
+        void Stop();
     }
 
     public sealed class ProcessSpecification

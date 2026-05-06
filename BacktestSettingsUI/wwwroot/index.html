@@ -433,7 +433,10 @@
 
                 <div class="actions">
                     <button id="saveButton" class="secondary" type="submit">Save</button>
-                    <button id="runButton" class="primary" type="button">Save and Run</button>
+                    <button id="buildButton" class="secondary" type="button">Build</button>
+                    <button id="rebuildButton" class="secondary" type="button">Rebuild</button>
+                    <button id="startButton" class="primary" type="button">Start</button>
+                    <button id="stopButton" class="secondary" type="button">Stop</button>
                 </div>
             </form>
         </section>
@@ -501,7 +504,10 @@
         const statusLabel = document.getElementById("statusLabel");
         const statusMessage = document.getElementById("statusMessage");
         const saveButton = document.getElementById("saveButton");
-        const runButton = document.getElementById("runButton");
+        const buildButton = document.getElementById("buildButton");
+        const rebuildButton = document.getElementById("rebuildButton");
+        const startButton = document.getElementById("startButton");
+        const stopButton = document.getElementById("stopButton");
         const resultsMeta = document.getElementById("resultsMeta");
         const resultsEmpty = document.getElementById("resultsEmpty");
         const resultsContent = document.getElementById("resultsContent");
@@ -515,6 +521,7 @@
         const statusPollIntervalMs = 1500;
 
         let activeRunState = "idle";
+        let activeStatus = null;
 
         function payloadFromForm() {
             return {
@@ -526,10 +533,19 @@
             };
         }
 
-        function setBusy(isBusy) {
-            const disableRun = isBusy || activeRunState === "building" || activeRunState === "running";
-            saveButton.disabled = isBusy;
-            runButton.disabled = disableRun;
+        function applyButtonState(isRequestInFlight) {
+            const status = activeStatus || {
+                canBuild: true,
+                canRebuild: true,
+                canStart: true,
+                canStop: false
+            };
+
+            saveButton.disabled = isRequestInFlight || status.canStop;
+            buildButton.disabled = isRequestInFlight || !status.canBuild;
+            rebuildButton.disabled = isRequestInFlight || !status.canRebuild;
+            startButton.disabled = isRequestInFlight || !status.canStart;
+            stopButton.disabled = isRequestInFlight || !status.canStop;
         }
 
         function setFeedback(message, isError = false) {
@@ -567,21 +583,40 @@
         }
 
         function renderStatus(status) {
+            activeStatus = status;
             activeRunState = status.status;
             statusLabel.textContent = status.status;
             statusMessage.textContent = status.message || "";
 
-             if (status.status === "running") {
+            if (status.status === "running") {
                 setFeedback("Lean is running.");
             } else if (status.status === "building") {
-                setFeedback("Building Lean...");
+                if (status.actionKind === "rebuild") {
+                    setFeedback("Rebuilding Lean...");
+                } else if (status.actionKind === "build") {
+                    setFeedback("Building Lean...");
+                } else {
+                    setFeedback("Building Lean for the backtest...");
+                }
+            } else if (status.status === "stopping") {
+                setFeedback(status.message || "Stopping current action...");
             } else if (status.status === "succeeded") {
-                setFeedback("Backtest completed successfully.");
+                if (status.actionKind === "build") {
+                    setFeedback("Lean build completed successfully.");
+                } else if (status.actionKind === "rebuild") {
+                    setFeedback("Lean rebuild completed successfully.");
+                } else {
+                    setFeedback("Backtest completed successfully.");
+                }
+            } else if (status.status === "stopped") {
+                setFeedback(status.message || "Operation stopped.");
             } else if (status.status === "failed") {
                 setFeedback(status.message || "Backtest failed.", true);
+            } else if (status.status === "idle") {
+                setFeedback(status.message || "");
             }
 
-            setBusy(false);
+            applyButtonState(false);
         }
 
         function renderMetricCards(container, items, emptyMessage) {
@@ -791,7 +826,7 @@
         }
 
         async function saveSettings() {
-            setBusy(true);
+            applyButtonState(true);
             setFeedback("Saving settings...");
             renderErrors(null);
 
@@ -807,31 +842,37 @@
                 renderErrors(error.body);
                 setFeedback("Unable to save settings.", true);
             } finally {
-                setBusy(false);
+                applyButtonState(false);
             }
         }
 
-        async function runBacktest() {
-            setBusy(true);
-            setFeedback("Saving settings and starting Lean...");
+        async function runAction(actionName, url, options = {}) {
+            applyButtonState(true);
             renderErrors(null);
 
             try {
-                const status = await fetchJson("/api/run", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payloadFromForm())
-                });
+                if (actionName === "start") {
+                    setFeedback("Saving settings and starting Lean...");
+                } else if (actionName === "build") {
+                    setFeedback("Starting Lean build...");
+                } else if (actionName === "rebuild") {
+                    setFeedback("Starting Lean rebuild...");
+                } else if (actionName === "stop") {
+                    setFeedback("Stopping current action...");
+                }
+
+                const status = await fetchJson(url, options);
                 renderStatus(status);
-                setFeedback("Lean is running.");
             } catch (error) {
                 renderErrors(error.body);
                 const message = error.response && error.response.status === 409
-                    ? "Another backtest is already running."
-                    : "Unable to start Lean.";
+                    ? "Another action is already in progress."
+                    : actionName === "stop"
+                        ? "Unable to stop the current action."
+                        : "Unable to start the requested action.";
                 setFeedback(message, true);
             } finally {
-                setBusy(false);
+                applyButtonState(false);
             }
         }
 
@@ -840,8 +881,24 @@
             await saveSettings();
         });
 
-        runButton.addEventListener("click", async () => {
-            await runBacktest();
+        buildButton.addEventListener("click", async () => {
+            await runAction("build", "/api/build", { method: "POST" });
+        });
+
+        rebuildButton.addEventListener("click", async () => {
+            await runAction("rebuild", "/api/rebuild", { method: "POST" });
+        });
+
+        startButton.addEventListener("click", async () => {
+            await runAction("start", "/api/run", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payloadFromForm())
+            });
+        });
+
+        stopButton.addEventListener("click", async () => {
+            await runAction("stop", "/api/stop", { method: "POST" });
         });
 
         setInterval(() => {

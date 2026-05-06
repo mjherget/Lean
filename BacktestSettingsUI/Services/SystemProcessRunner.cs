@@ -6,9 +6,9 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
 {
     public sealed class SystemProcessRunner : IProcessRunner
     {
-        public async Task<int> RunAsync(ProcessSpecification specification, CancellationToken cancellationToken)
+        public IManagedProcess Start(ProcessSpecification specification)
         {
-            using var process = new Process
+            var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -24,8 +24,43 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
             }
 
             process.Start();
-            await process.WaitForExitAsync(cancellationToken);
-            return process.ExitCode;
+            return new ManagedProcess(process);
+        }
+
+        private sealed class ManagedProcess : IManagedProcess
+        {
+            private readonly Process _process;
+
+            public ManagedProcess(Process process)
+            {
+                _process = process;
+            }
+
+            public async Task<int> WaitForExitAsync(CancellationToken cancellationToken)
+            {
+                using (_process)
+                {
+                    await _process.WaitForExitAsync(cancellationToken);
+                    return _process.ExitCode;
+                }
+            }
+
+            public void Stop()
+            {
+                try
+                {
+                    if (_process.HasExited)
+                    {
+                        return;
+                    }
+
+                    _process.Kill(entireProcessTree: true);
+                }
+                catch
+                {
+                    // Best effort stop; the run service will reflect the final process outcome.
+                }
+            }
         }
     }
 }

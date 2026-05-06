@@ -56,6 +56,33 @@ namespace QuantConnect.Lean.BacktestSettingsUI
                 return Results.Ok(runStatus);
             });
 
+            app.MapPost("/api/build", async (LeanRunService runService, CancellationToken cancellationToken) =>
+            {
+                var runStatus = await runService.BuildAsync(cancellationToken);
+                if (runStatus == null)
+                {
+                    return Results.Conflict(new { message = "Another action is already in progress." });
+                }
+
+                return Results.Ok(runStatus);
+            });
+
+            app.MapPost("/api/rebuild", async (LeanRunService runService, CancellationToken cancellationToken) =>
+            {
+                var runStatus = await runService.RebuildAsync(cancellationToken);
+                if (runStatus == null)
+                {
+                    return Results.Conflict(new { message = "Another action is already in progress." });
+                }
+
+                return Results.Ok(runStatus);
+            });
+
+            app.MapPost("/api/stop", async (LeanRunService runService, CancellationToken cancellationToken) =>
+            {
+                return Results.Ok(await runService.StopAsync(cancellationToken));
+            });
+
             app.MapGet("/api/run-status", (LeanRunService runService) =>
             {
                 return Results.Ok(runService.GetStatus());
