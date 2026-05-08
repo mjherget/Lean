@@ -32,21 +32,13 @@
         }
 
         .shell {
-            max-width: 920px;
+            display: grid;
+            grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
+            align-items: start;
+            gap: 18px;
+            max-width: 1520px;
             margin: 0 auto;
-            padding: 48px 20px 64px;
-        }
-
-        .hero {
-            margin-bottom: 28px;
-        }
-
-        .eyebrow {
-            font-size: 0.8rem;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            color: var(--accent);
-            margin-bottom: 10px;
+            padding: 18px;
         }
 
         h1 {
@@ -55,33 +47,26 @@
             margin: 0 0 12px;
         }
 
-        .subhead {
-            max-width: 680px;
-            color: var(--muted);
-            font-size: 1.05rem;
-            line-height: 1.6;
-        }
-
         .panel {
             background: color-mix(in srgb, var(--panel) 92%, white);
             border: 1px solid var(--border);
-            border-radius: 24px;
+            border-radius: 14px;
             box-shadow: var(--shadow);
-            padding: 28px;
+            padding: 18px;
             backdrop-filter: blur(8px);
         }
 
         .panel-head {
             display: flex;
             justify-content: space-between;
-            gap: 20px;
+            gap: 14px;
             align-items: start;
-            margin-bottom: 22px;
+            margin-bottom: 14px;
         }
 
         .panel-head h2 {
-            margin: 0 0 6px;
-            font-size: 1.6rem;
+            margin: 0 0 4px;
+            font-size: 1.35rem;
         }
 
         .panel-head p {
@@ -90,12 +75,12 @@
         }
 
         .status-badge {
-            min-width: 170px;
-            padding: 12px 14px;
-            border-radius: 16px;
+            min-width: 150px;
+            padding: 9px 10px;
+            border-radius: 10px;
             background: #f3efe5;
             border: 1px solid var(--border);
-            font-size: 0.95rem;
+            font-size: 0.82rem;
         }
 
         .status-badge strong {
@@ -106,22 +91,22 @@
 
         form {
             display: grid;
-            gap: 18px;
+            gap: 12px;
         }
 
         .grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
+            gap: 10px;
         }
 
         .field {
             display: grid;
-            gap: 8px;
+            gap: 5px;
         }
 
         .field label {
-            font-size: 0.92rem;
+            font-size: 0.74rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: var(--muted);
@@ -130,12 +115,13 @@
         .field input,
         .field select {
             width: 100%;
-            border-radius: 14px;
+            border-radius: 8px;
             border: 1px solid var(--border);
             background: white;
-            padding: 14px 16px;
+            padding: 9px 10px;
             font: inherit;
             color: var(--ink);
+            min-height: 38px;
         }
 
         .field input:focus,
@@ -145,25 +131,25 @@
         }
 
         .algorithm {
-            padding: 14px 16px;
-            border-radius: 14px;
+            padding: 9px 10px;
+            border-radius: 8px;
             background: #f3efe5;
             border: 1px dashed var(--border);
-            font-size: 0.98rem;
+            font-size: 0.86rem;
         }
 
         .actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
-            margin-top: 8px;
+            margin-top: 2px;
         }
 
         button {
             border: none;
             border-radius: 999px;
-            padding: 14px 22px;
+            padding: 9px 14px;
             font: inherit;
             cursor: pointer;
             transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
@@ -193,9 +179,9 @@
         }
 
         .feedback {
-            min-height: 24px;
+            min-height: 18px;
             color: var(--muted);
-            font-size: 0.95rem;
+            font-size: 0.85rem;
         }
 
         .feedback.error {
@@ -204,8 +190,8 @@
 
         .errors {
             display: none;
-            border-radius: 18px;
-            padding: 14px 16px;
+            border-radius: 10px;
+            padding: 10px 12px;
             background: #fef3f2;
             color: var(--danger);
             border: 1px solid rgba(180, 35, 24, 0.18);
@@ -221,15 +207,15 @@
         }
 
         .results-panel {
-            margin-top: 28px;
+            margin-top: 0;
         }
 
         .results-head {
             display: flex;
             justify-content: space-between;
-            gap: 20px;
+            gap: 14px;
             align-items: end;
-            margin-bottom: 18px;
+            margin-bottom: 12px;
         }
 
         .results-head h2,
@@ -239,107 +225,114 @@
 
         .results-meta {
             color: var(--muted);
-            font-size: 0.95rem;
+            font-size: 0.82rem;
         }
 
         .results-empty {
-            border-radius: 18px;
+            border-radius: 10px;
             border: 1px dashed var(--border);
             background: #f7f2e8;
-            padding: 18px;
+            padding: 12px;
             color: var(--muted);
         }
 
         .results-content {
             display: grid;
-            gap: 22px;
+            grid-template-columns: minmax(390px, 1.2fr) minmax(390px, 1fr);
+            gap: 14px;
+            align-items: start;
         }
 
         .results-block {
             display: grid;
-            gap: 12px;
+            gap: 8px;
+        }
+
+        .results-block h3 {
+            font-size: 1rem;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
+            gap: 8px;
         }
 
         .stat-card {
             border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 14px 16px;
+            border-radius: 8px;
+            padding: 9px 10px;
             background: #fffcf6;
+            min-height: 58px;
         }
 
         .stat-card .label {
             display: block;
             color: var(--muted);
-            font-size: 0.82rem;
+            font-size: 0.66rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
         .stat-card .value {
             display: block;
-            font-size: 1.05rem;
-            line-height: 1.35;
+            font-size: 0.88rem;
+            line-height: 1.2;
         }
 
         .chart-shell {
             border: 1px solid var(--border);
-            border-radius: 20px;
+            border-radius: 10px;
             background: linear-gradient(180deg, rgba(11, 110, 79, 0.08), rgba(255, 255, 255, 0.92));
-            padding: 16px;
+            padding: 10px;
         }
 
         .chart-summary {
             display: flex;
             justify-content: space-between;
-            gap: 12px;
+            gap: 8px;
             flex-wrap: wrap;
             color: var(--muted);
-            font-size: 0.95rem;
-            margin-bottom: 12px;
+            font-size: 0.75rem;
+            margin-bottom: 6px;
         }
 
         .chart-frame {
             width: 100%;
-            height: 260px;
+            height: 170px;
             display: block;
         }
 
         .chart-axis {
             display: flex;
             justify-content: space-between;
-            gap: 12px;
-            margin-top: 10px;
+            gap: 8px;
+            margin-top: 6px;
             color: var(--muted);
-            font-size: 0.86rem;
+            font-size: 0.72rem;
         }
 
         .orders-table {
             width: 100%;
             border-collapse: collapse;
             border: 1px solid var(--border);
-            border-radius: 18px;
+            border-radius: 10px;
             overflow: hidden;
             background: #fffcf6;
         }
 
         .orders-table th,
         .orders-table td {
-            padding: 12px 14px;
+            padding: 7px 8px;
             text-align: left;
             border-bottom: 1px solid var(--border);
-            font-size: 0.95rem;
+            font-size: 0.78rem;
             vertical-align: top;
         }
 
         .orders-table th {
-            font-size: 0.82rem;
+            font-size: 0.66rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
             color: var(--muted);
@@ -354,13 +347,24 @@
             font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
         }
 
+        @media (max-width: 1180px) {
+            .shell {
+                grid-template-columns: 1fr;
+                max-width: 980px;
+            }
+
+            .results-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 760px) {
             .shell {
-                padding-top: 32px;
+                padding: 12px;
             }
 
             .panel {
-                padding: 22px;
+                padding: 14px;
             }
 
             .panel-head {
@@ -375,12 +379,6 @@
 </head>
 <body>
     <main class="shell">
-        <section class="hero">
-            <div class="eyebrow">Lean Local Control Room</div>
-            <h1>Shape the backtest without touching the source.</h1>
-            <p class="subhead">Update the active algorithm's core stock-analysis inputs, save them into <code>Launcher/config.json</code>, and launch Lean from the same screen.</p>
-        </section>
-
         <section class="panel">
             <div class="panel-head">
                 <div>
@@ -496,7 +494,7 @@
         </section>
     </main>
 
-    <script>
+    <script type="module">
         const form = document.getElementById("settingsForm");
         const algorithmName = document.getElementById("algorithmName");
         const feedback = document.getElementById("feedback");
@@ -570,7 +568,13 @@
             }
 
             errorBox.classList.add("visible");
-            errorBox.innerHTML = `<ul>${messages.map(message => `<li>${message}</li>`).join("")}</ul>`;
+            const list = document.createElement("ul");
+            for (const message of messages) {
+                const item = document.createElement("li");
+                item.textContent = message;
+                list.appendChild(item);
+            }
+            errorBox.replaceChildren(list);
         }
 
         function renderSettings(settings) {
@@ -747,11 +751,13 @@
 
             for (const order of orders) {
                 const row = document.createElement("tr");
-                const fillText = order.fillQuantity && order.fillPrice
-                    ? `${order.fillQuantity} @ ${formatMoney(Number(order.fillPrice))}`
-                    : order.fillQuantity
-                        ? `${order.fillQuantity}`
-                        : "";
+                let fillText = "";
+                if (order.fillQuantity && order.fillPrice) {
+                    fillText = `${order.fillQuantity} @ ${formatMoney(Number(order.fillPrice))}`;
+                } else if (order.fillQuantity) {
+                    fillText = `${order.fillQuantity}`;
+                }
+
                 const values = [
                     formatTimestamp(order.time),
                     order.symbol || "",
@@ -803,11 +809,22 @@
 
         async function fetchJson(url, options) {
             const response = await fetch(url, options);
-            const body = await response.json().catch(() => null);
+            const body = await readJsonBody(response);
             if (!response.ok) {
-                throw { response, body };
+                const error = new Error(`Request failed with status ${response.status}`);
+                error.response = response;
+                error.body = body;
+                throw error;
             }
             return body;
+        }
+
+        async function readJsonBody(response) {
+            try {
+                return await response.json();
+            } catch {
+                return null;
+            }
         }
 
         async function loadSettings() {
@@ -865,11 +882,12 @@
                 renderStatus(status);
             } catch (error) {
                 renderErrors(error.body);
-                const message = error.response && error.response.status === 409
-                    ? "Another action is already in progress."
-                    : actionName === "stop"
-                        ? "Unable to stop the current action."
-                        : "Unable to start the requested action.";
+                let message = "Unable to start the requested action.";
+                if (error.response && error.response.status === 409) {
+                    message = "Another action is already in progress.";
+                } else if (actionName === "stop") {
+                    message = "Unable to stop the current action.";
+                }
                 setFeedback(message, true);
             } finally {
                 applyButtonState(false);
@@ -901,14 +919,23 @@
             await runAction("stop", "/api/stop", { method: "POST" });
         });
 
+        async function refreshStatusAndResults() {
+            try {
+                await Promise.all([loadStatus(), loadResults()]);
+            } catch {
+                // Polling is best-effort; the next tick can recover from transient failures.
+            }
+        }
+
         setInterval(() => {
-            loadStatus().catch(() => {});
-            loadResults().catch(() => {});
+            void refreshStatusAndResults();
         }, statusPollIntervalMs);
 
-        Promise.all([loadSettings(), loadStatus(), loadResults()]).catch(() => {
+        try {
+            await Promise.all([loadSettings(), loadStatus(), loadResults()]);
+        } catch {
             setFeedback("Unable to load the Lean settings UI.", true);
-        });
+        }
     </script>
 </body>
 </html>
