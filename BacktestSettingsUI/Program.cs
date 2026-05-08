@@ -24,6 +24,7 @@ namespace QuantConnect.Lean.BacktestSettingsUI
             builder.Services.AddSingleton<LeanBacktestPaths>();
             builder.Services.AddSingleton<LeanConfigFileService>();
             builder.Services.AddSingleton<LeanResultFileService>();
+            builder.Services.AddSingleton<TickerSearchService>();
             builder.Services.AddSingleton<IProcessRunner, SystemProcessRunner>();
             builder.Services.AddSingleton<LeanRunService>();
 
@@ -43,6 +44,11 @@ namespace QuantConnect.Lean.BacktestSettingsUI
             app.MapGet("/api/settings", (LeanConfigFileService configFileService) =>
             {
                 return Results.Ok(configFileService.Load());
+            });
+
+            app.MapGet("/api/tickers", (HttpRequest request, TickerSearchService tickerSearchService) =>
+            {
+                return Results.Ok(tickerSearchService.Search(request.Query["q"].ToString()));
             });
 
             app.MapPost("/api/settings", (BacktestSettingsRequest request, LeanConfigFileService configFileService) =>

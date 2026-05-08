@@ -130,6 +130,51 @@
             border-color: var(--accent);
         }
 
+        .combo-field {
+            position: relative;
+        }
+
+        .combo-list {
+            position: absolute;
+            z-index: 15;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            max-height: 210px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 14px 28px rgba(31, 41, 51, 0.16);
+            background: var(--panel);
+            padding: 4px;
+        }
+
+        .combo-list[hidden] {
+            display: none;
+        }
+
+        .combo-option {
+            width: 100%;
+            border-radius: 6px;
+            padding: 7px 8px;
+            background: transparent;
+            color: var(--ink);
+            font-size: 0.86rem;
+            text-align: left;
+        }
+
+        .combo-option:hover,
+        .combo-option.is-active {
+            background: #ece6d8;
+            transform: none;
+        }
+
+        .combo-empty {
+            padding: 8px;
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
         .indicator-section {
             display: grid;
             gap: 8px;
@@ -603,9 +648,10 @@
                 </div>
 
                 <div class="grid">
-                    <div class="field">
+                    <div class="field combo-field">
                         <label for="ticker">Ticker</label>
-                        <input id="ticker" name="ticker" type="text" autocomplete="off" placeholder="AAPL">
+                        <input id="ticker" name="ticker" type="text" autocomplete="off" placeholder="AAPL" role="combobox" aria-expanded="false" aria-controls="tickerSuggestions">
+                        <div id="tickerSuggestions" class="combo-list" role="listbox" hidden></div>
                     </div>
                     <div class="field">
                         <label for="resolution">Resolution</label>
@@ -800,6 +846,8 @@
         const rebuildButton = document.getElementById("rebuildButton");
         const startButton = document.getElementById("startButton");
         const stopButton = document.getElementById("stopButton");
+        const tickerInput = document.getElementById("ticker");
+        const tickerSuggestions = document.getElementById("tickerSuggestions");
         const resultsMeta = document.getElementById("resultsMeta");
         const resultsEmpty = document.getElementById("resultsEmpty");
         const resultsContent = document.getElementById("resultsContent");
@@ -824,10 +872,12 @@
         let visibleDate = startOfMonth(new Date());
         let wheelDeltaRemainder = 0;
         let wheelResetTimer = null;
+        let tickerSuggestionAbortController = null;
+        let activeTickerSuggestionIndex = -1;
 
         function payloadFromForm() {
             return {
-                ticker: document.getElementById("ticker").value,
+                ticker: tickerInput.value,
                 startDate: document.getElementById("startDate").value,
                 endDate: document.getElementById("endDate").value,
                 cash: document.getElementById("cash").value,
@@ -895,9 +945,87 @@
             errorBox.replaceChildren(list);
         }
 
+        async function loadTickerSuggestions(query) {
+            tickerSuggestionAbortController?.abort();
+            tickerSuggestionAbortController = new AbortController();
+
+            const response = await fetch(`/api/tickers?q=${encodeURIComponent(query || "")}`, {
+                signal: tickerSuggestionAbortController.signal
+            });
+
+            if (!response.ok) {
+                return [];
+            }
+
+            return await response.json();
+        }
+
+        function showTickerSuggestions() {
+            tickerSuggestions.hidden = false;
+            tickerInput.setAttribute("aria-expanded", "true");
+        }
+
+        function hideTickerSuggestions() {
+            tickerSuggestions.hidden = true;
+            tickerInput.setAttribute("aria-expanded", "false");
+            activeTickerSuggestionIndex = -1;
+        }
+
+        function renderTickerSuggestions(symbols) {
+            tickerSuggestions.replaceChildren();
+            activeTickerSuggestionIndex = -1;
+
+            if (!symbols || symbols.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "combo-empty";
+                empty.textContent = "No local symbols found.";
+                tickerSuggestions.appendChild(empty);
+                showTickerSuggestions();
+                return;
+            }
+
+            symbols.forEach((symbol, index) => {
+                const option = document.createElement("button");
+                option.className = "combo-option";
+                option.type = "button";
+                option.role = "option";
+                option.textContent = symbol;
+                option.addEventListener("click", () => selectTickerSuggestion(symbol));
+                option.addEventListener("mouseenter", () => setActiveTickerSuggestion(index));
+                tickerSuggestions.appendChild(option);
+            });
+
+            showTickerSuggestions();
+        }
+
+        function selectTickerSuggestion(symbol) {
+            tickerInput.value = symbol;
+            hideTickerSuggestions();
+            tickerInput.focus();
+        }
+
+        function setActiveTickerSuggestion(index) {
+            const options = [...tickerSuggestions.querySelectorAll(".combo-option")];
+            activeTickerSuggestionIndex = index;
+            options.forEach((option, optionIndex) => {
+                option.classList.toggle("is-active", optionIndex === index);
+            });
+        }
+
+        async function refreshTickerSuggestions() {
+            try {
+                const symbols = await loadTickerSuggestions(tickerInput.value);
+                renderTickerSuggestions(symbols);
+            } catch (error) {
+                if (error.name !== "AbortError") {
+                    hideTickerSuggestions();
+                }
+            }
+        }
+
         function renderSettings(settings) {
             algorithmName.textContent = settings.algorithmName || "Unknown algorithm";
-            document.getElementById("ticker").value = settings.ticker;
+            tickerInput.value = settings.ticker;
             document.getElementById("startDate").value = settings.startDate;
             document.getElementById("endDate").value = settings.endDate;
             document.getElementById("cash").value = settings.cash;
@@ -1461,6 +1589,35 @@
             await runAction("stop", "/api/stop", { method: "POST" });
         });
 
+        tickerInput.addEventListener("focus", () => {
+            void refreshTickerSuggestions();
+        });
+
+        tickerInput.addEventListener("input", () => {
+            tickerInput.value = tickerInput.value.toUpperCase();
+            void refreshTickerSuggestions();
+        });
+
+        tickerInput.addEventListener("keydown", (event) => {
+            const options = [...tickerSuggestions.querySelectorAll(".combo-option")];
+            if (event.key === "ArrowDown" && options.length > 0) {
+                event.preventDefault();
+                setActiveTickerSuggestion(Math.min(activeTickerSuggestionIndex + 1, options.length - 1));
+            } else if (event.key === "ArrowUp" && options.length > 0) {
+                event.preventDefault();
+                setActiveTickerSuggestion(Math.max(activeTickerSuggestionIndex - 1, 0));
+            } else if (event.key === "Enter" && activeTickerSuggestionIndex >= 0) {
+                event.preventDefault();
+                selectTickerSuggestion(options[activeTickerSuggestionIndex].textContent);
+            } else if (event.key === "Escape") {
+                hideTickerSuggestions();
+            }
+        });
+
+        tickerSuggestions.addEventListener("click", (event) => {
+            event.stopPropagation();
+        });
+
         for (const input of document.querySelectorAll(".date-input")) {
             input.addEventListener("click", () => openDatePicker(input));
             input.addEventListener("focus", () => openDatePicker(input));
@@ -1487,6 +1644,10 @@
         }, { passive: false });
 
         document.addEventListener("click", (event) => {
+            if (!tickerSuggestions.hidden && event.target !== tickerInput && !tickerSuggestions.contains(event.target)) {
+                hideTickerSuggestions();
+            }
+
             if (datePicker.hidden) {
                 return;
             }
@@ -1499,6 +1660,10 @@
         });
 
         document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !tickerSuggestions.hidden) {
+                hideTickerSuggestions();
+            }
+
             if (event.key === "Escape" && !datePicker.hidden) {
                 closeDatePicker();
             }
