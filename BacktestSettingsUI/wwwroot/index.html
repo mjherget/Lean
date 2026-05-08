@@ -425,6 +425,12 @@
             font-size: 0.82rem;
         }
 
+        .section-meta {
+            color: var(--muted);
+            font-size: 0.76rem;
+            margin-top: -4px;
+        }
+
         .results-empty {
             border-radius: 10px;
             border: 1px dashed var(--border);
@@ -745,6 +751,7 @@
 
                 <section class="results-block">
                     <h3>Technical Indicators</h3>
+                    <div id="indicatorValuesDate" class="section-meta"></div>
                     <div id="indicatorValuesGrid" class="stats-grid"></div>
                 </section>
 
@@ -799,6 +806,7 @@
         const statisticsGrid = document.getElementById("statisticsGrid");
         const runtimeStatisticsGrid = document.getElementById("runtimeStatisticsGrid");
         const indicatorValuesGrid = document.getElementById("indicatorValuesGrid");
+        const indicatorValuesDate = document.getElementById("indicatorValuesDate");
         const chartSummary = document.getElementById("chartSummary");
         const equityChart = document.getElementById("equityChart");
         const chartStartLabel = document.getElementById("chartStartLabel");
@@ -1302,6 +1310,7 @@
                 statisticsGrid.replaceChildren();
                 runtimeStatisticsGrid.replaceChildren();
                 indicatorValuesGrid.replaceChildren();
+                indicatorValuesDate.textContent = "";
                 chartSummary.textContent = "";
                 equityChart.replaceChildren();
                 chartStartLabel.textContent = "";
@@ -1316,6 +1325,7 @@
 
             renderMetricCards(statisticsGrid, results.statistics, "No summary statistics found.");
             renderMetricCards(runtimeStatisticsGrid, results.runtimeStatistics, "No runtime snapshot found.");
+            indicatorValuesDate.textContent = `As of ${formatSelectedEndDate()}`;
             renderMetricCards(indicatorValuesGrid, formatIndicatorValues(results.indicatorValues), "Run a backtest with indicators enabled.");
             renderChart(results.equitySeries);
             renderOrders(results.recentOrders);
@@ -1328,8 +1338,15 @@
 
             return indicatorValues.map(indicator => ({
                 label: indicator.label,
-                value: `${formatDecimal(Number(indicator.value))} · ${formatTimestamp(indicator.time)}`
+                value: formatDecimal(Number(indicator.value))
             }));
+        }
+
+        function formatSelectedEndDate() {
+            const endDate = parseIsoDate(document.getElementById("endDate").value);
+            return endDate
+                ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(endDate)
+                : "selected end date";
         }
 
         async function fetchJson(url, options) {

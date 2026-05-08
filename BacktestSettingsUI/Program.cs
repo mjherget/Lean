@@ -30,7 +30,15 @@ namespace QuantConnect.Lean.BacktestSettingsUI
             var app = builder.Build();
 
             app.UseDefaultFiles();
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = context =>
+                {
+                    context.Context.Response.Headers.CacheControl = "no-store";
+                    context.Context.Response.Headers.Pragma = "no-cache";
+                    context.Context.Response.Headers.Expires = "0";
+                }
+            });
 
             app.MapGet("/api/settings", (LeanConfigFileService configFileService) =>
             {

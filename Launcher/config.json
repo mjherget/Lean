@@ -328,7 +328,7 @@
     "ema-slow": 20,
   "ticker": "SPY",
   "start-date": "2019-10-07",
-  "end-date": "2026-05-05",
+  "end-date": "2026-05-08",
   "cash": 100000,
   "resolution": "Daily",
   "sma-enabled": true,
