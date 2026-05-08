@@ -15,11 +15,13 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Indicators;
 using QuantConnect.Orders;
 using QuantConnect.Interfaces;
 
@@ -33,12 +35,23 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="trading and orders" />
     public class BasicTemplateFrameworkAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        private const string TechnicalIndicatorsChartName = "Technical Indicators";
+        private BasicTemplateFrameworkSettings _backtestSettings;
+        private Symbol _symbol;
+        private SimpleMovingAverage _sma;
+        private ExponentialMovingAverage _emaFast;
+        private ExponentialMovingAverage _emaSlow;
+        private RelativeStrengthIndex _rsi;
+        private MovingAverageConvergenceDivergence _macd;
+        private BollingerBands _bollingerBands;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
         public override void Initialize()
         {
             var backtestSettings = BasicTemplateFrameworkSettings.FromParameters(GetParameters(), Debug);
+            _backtestSettings = backtestSettings;
 
             // Set requested data resolution
             UniverseSettings.Resolution = backtestSettings.Resolution;
@@ -51,9 +64,12 @@ namespace QuantConnect.Algorithm.CSharp
             // Forex, CFD, Equities Resolutions: Tick, Second, Minute, Hour, Daily.
             // Futures Resolution: Tick, Second, Minute
             // Options Resolution: Minute Only.
+            _symbol = QuantConnect.Symbol.Create(backtestSettings.Ticker, SecurityType.Equity, Market.USA);
+            AddEquity(backtestSettings.Ticker, backtestSettings.Resolution);
+            ConfigureTechnicalIndicators(backtestSettings);
 
             // set algorithm framework models
-            SetUniverseSelection(new ManualUniverseSelectionModel(QuantConnect.Symbol.Create(backtestSettings.Ticker, SecurityType.Equity, Market.USA)));
+            SetUniverseSelection(new ManualUniverseSelectionModel(_symbol));
             SetAlpha(new ConstantAlphaModel(InsightType.Price, InsightDirection.Up, TimeSpan.FromMinutes(20), 0.025, null));
 
             // We can define who often the EWPCM will rebalance if no new insight is submitted using:
@@ -66,6 +82,79 @@ namespace QuantConnect.Algorithm.CSharp
 
             SetExecution(new ImmediateExecutionModel());
             SetRiskManagement(new MaximumDrawdownPercentPerSecurity(0.01m));
+        }
+
+        public override void OnData(Slice slice)
+        {
+            PlotTechnicalIndicators();
+        }
+
+        private void ConfigureTechnicalIndicators(BasicTemplateFrameworkSettings settings)
+        {
+            if (settings.SmaEnabled)
+            {
+                _sma = SMA(_symbol, settings.SmaPeriod, settings.Resolution);
+            }
+
+            if (settings.EmaEnabled)
+            {
+                _emaFast = EMA(_symbol, settings.EmaFastPeriod, settings.Resolution);
+                _emaSlow = EMA(_symbol, settings.EmaSlowPeriod, settings.Resolution);
+            }
+
+            if (settings.RsiEnabled)
+            {
+                _rsi = RSI(_symbol, settings.RsiPeriod, MovingAverageType.Wilders, settings.Resolution);
+            }
+
+            if (settings.MacdEnabled)
+            {
+                _macd = MACD(_symbol, settings.MacdFastPeriod, settings.MacdSlowPeriod, settings.MacdSignalPeriod, MovingAverageType.Exponential, settings.Resolution);
+            }
+
+            if (settings.BollingerBandsEnabled)
+            {
+                _bollingerBands = BB(_symbol, settings.BollingerBandsPeriod, settings.BollingerBandsStandardDeviations, MovingAverageType.Simple, settings.Resolution);
+            }
+        }
+
+        private void PlotTechnicalIndicators()
+        {
+            if (_backtestSettings.SmaEnabled && _sma?.IsReady == true)
+            {
+                Plot(TechnicalIndicatorsChartName, $"SMA {_backtestSettings.SmaPeriod}", _sma.Current.Value);
+            }
+
+            if (_backtestSettings.EmaEnabled)
+            {
+                if (_emaFast?.IsReady == true)
+                {
+                    Plot(TechnicalIndicatorsChartName, $"EMA {_backtestSettings.EmaFastPeriod}", _emaFast.Current.Value);
+                }
+
+                if (_emaSlow?.IsReady == true)
+                {
+                    Plot(TechnicalIndicatorsChartName, $"EMA {_backtestSettings.EmaSlowPeriod}", _emaSlow.Current.Value);
+                }
+            }
+
+            if (_backtestSettings.RsiEnabled && _rsi?.IsReady == true)
+            {
+                Plot(TechnicalIndicatorsChartName, $"RSI {_backtestSettings.RsiPeriod}", _rsi.Current.Value);
+            }
+
+            if (_backtestSettings.MacdEnabled && _macd?.IsReady == true)
+            {
+                Plot(TechnicalIndicatorsChartName, "MACD", _macd.Current.Value);
+                Plot(TechnicalIndicatorsChartName, "MACD Signal", _macd.Signal.Current.Value);
+            }
+
+            if (_backtestSettings.BollingerBandsEnabled && _bollingerBands?.IsReady == true)
+            {
+                Plot(TechnicalIndicatorsChartName, "BB Upper", _bollingerBands.UpperBand.Current.Value);
+                Plot(TechnicalIndicatorsChartName, "BB Middle", _bollingerBands.MiddleBand.Current.Value);
+                Plot(TechnicalIndicatorsChartName, "BB Lower", _bollingerBands.LowerBand.Current.Value);
+            }
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)

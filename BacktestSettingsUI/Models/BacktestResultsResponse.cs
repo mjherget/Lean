@@ -13,6 +13,7 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Models
         public DateTimeOffset? GeneratedAtUtc { get; init; }
         public IReadOnlyList<ResultKeyValueResponse> Statistics { get; init; } = Array.Empty<ResultKeyValueResponse>();
         public IReadOnlyList<ResultKeyValueResponse> RuntimeStatistics { get; init; } = Array.Empty<ResultKeyValueResponse>();
+        public IReadOnlyList<IndicatorValueResponse> IndicatorValues { get; init; } = Array.Empty<IndicatorValueResponse>();
         public IReadOnlyList<EquityPointResponse> EquitySeries { get; init; } = Array.Empty<EquityPointResponse>();
         public IReadOnlyList<RecentOrderResponse> RecentOrders { get; init; } = Array.Empty<RecentOrderResponse>();
     }
@@ -25,6 +26,13 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Models
 
     public sealed class EquityPointResponse
     {
+        public string Time { get; init; }
+        public decimal Value { get; init; }
+    }
+
+    public sealed class IndicatorValueResponse
+    {
+        public string Label { get; init; }
         public string Time { get; init; }
         public decimal Value { get; init; }
     }

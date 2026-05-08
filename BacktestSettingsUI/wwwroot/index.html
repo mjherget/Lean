@@ -212,6 +212,121 @@
             font-size: 0.82rem;
         }
 
+        .date-input {
+            cursor: pointer;
+        }
+
+        .date-picker {
+            position: absolute;
+            z-index: 20;
+            width: min(330px, calc(100vw - 24px));
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 18px 38px rgba(31, 41, 51, 0.18);
+            background: var(--panel);
+            padding: 10px;
+        }
+
+        .date-picker[hidden] {
+            display: none;
+        }
+
+        .date-picker-head {
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr) auto 34px;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .date-picker-title {
+            flex: 1;
+            color: var(--ink);
+            font-size: 0.92rem;
+            text-align: center;
+        }
+
+        .date-picker-selects {
+            display: grid;
+            grid-template-columns: minmax(72px, 1fr) 68px;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .date-picker-selects select,
+        .date-picker-selects input {
+            min-height: 30px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: white;
+            color: var(--ink);
+            font: inherit;
+            font-size: 0.82rem;
+            padding: 5px 6px;
+            min-width: 0;
+        }
+
+        .date-picker button {
+            min-height: 30px;
+            border-radius: 7px;
+            padding: 6px 8px;
+            font-size: 0.82rem;
+        }
+
+        .date-picker-nav {
+            width: 34px;
+            background: #ece6d8;
+            color: var(--ink);
+        }
+
+        .date-picker-today {
+            background: var(--accent);
+            color: white;
+            white-space: nowrap;
+        }
+
+        .date-picker-weekdays,
+        .date-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .date-picker-weekdays {
+            margin-bottom: 4px;
+            color: var(--muted);
+            font-size: 0.64rem;
+            letter-spacing: 0.04em;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .date-picker-day {
+            min-height: 30px;
+            border-radius: 7px;
+            padding: 0;
+            background: transparent;
+            color: var(--ink);
+        }
+
+        .date-picker-day:hover {
+            background: #ece6d8;
+        }
+
+        .date-picker-day.is-muted {
+            color: color-mix(in srgb, var(--muted) 55%, white);
+        }
+
+        .date-picker-day.is-selected {
+            background: var(--accent);
+            color: white;
+        }
+
+        .date-picker-day.is-today:not(.is-selected) {
+            outline: 1px solid var(--accent);
+            outline-offset: -1px;
+        }
+
         .algorithm {
             padding: 9px 10px;
             border-radius: 8px;
@@ -498,11 +613,11 @@
                     </div>
                     <div class="field">
                         <label for="startDate">Start Date</label>
-                        <input id="startDate" name="startDate" type="date">
+                        <input id="startDate" class="date-input" name="startDate" type="text" autocomplete="off" inputmode="none" readonly>
                     </div>
                     <div class="field">
                         <label for="endDate">End Date</label>
-                        <input id="endDate" name="endDate" type="date">
+                        <input id="endDate" class="date-input" name="endDate" type="text" autocomplete="off" inputmode="none" readonly>
                     </div>
                     <div class="field">
                         <label for="cash">Cash</label>
@@ -629,6 +744,11 @@
                 </section>
 
                 <section class="results-block">
+                    <h3>Technical Indicators</h3>
+                    <div id="indicatorValuesGrid" class="stats-grid"></div>
+                </section>
+
+                <section class="results-block">
                     <h3>Equity Curve</h3>
                     <div class="chart-shell">
                         <div id="chartSummary" class="chart-summary"></div>
@@ -659,6 +779,7 @@
             </div>
         </section>
     </main>
+    <div id="datePicker" class="date-picker" hidden></div>
 
     <script type="module">
         const form = document.getElementById("settingsForm");
@@ -677,15 +798,24 @@
         const resultsContent = document.getElementById("resultsContent");
         const statisticsGrid = document.getElementById("statisticsGrid");
         const runtimeStatisticsGrid = document.getElementById("runtimeStatisticsGrid");
+        const indicatorValuesGrid = document.getElementById("indicatorValuesGrid");
         const chartSummary = document.getElementById("chartSummary");
         const equityChart = document.getElementById("equityChart");
         const chartStartLabel = document.getElementById("chartStartLabel");
         const chartEndLabel = document.getElementById("chartEndLabel");
         const ordersTableBody = document.getElementById("ordersTableBody");
+        const datePicker = document.getElementById("datePicker");
         const statusPollIntervalMs = 1500;
+        const monthWheelThreshold = 220;
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
         let activeRunState = "idle";
         let activeStatus = null;
+        let activeDateInput = null;
+        let visibleDate = startOfMonth(new Date());
+        let wheelDeltaRemainder = 0;
+        let wheelResetTimer = null;
 
         function payloadFromForm() {
             return {
@@ -780,6 +910,188 @@
             document.getElementById("bollingerBandsStandardDeviations").value = settings.bollingerBandsStandardDeviations;
         }
 
+        function parseIsoDate(value) {
+            const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
+            if (!match) {
+                return null;
+            }
+
+            const year = Number(match[1]);
+            const month = Number(match[2]) - 1;
+            const day = Number(match[3]);
+            const date = new Date(year, month, day);
+            if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+                return null;
+            }
+
+            return date;
+        }
+
+        function formatIsoDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+        }
+
+        function todayIsoDate() {
+            return formatIsoDate(new Date());
+        }
+
+        function startOfMonth(date) {
+            return new Date(date.getFullYear(), date.getMonth(), 1);
+        }
+
+        function addMonths(date, amount) {
+            return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+        }
+
+        function positionDatePicker(input) {
+            const rect = input.getBoundingClientRect();
+            const pickerWidth = 310;
+            const left = Math.min(
+                window.scrollX + rect.left,
+                window.scrollX + document.documentElement.clientWidth - pickerWidth - 12);
+
+            datePicker.style.left = `${Math.max(12, left)}px`;
+            datePicker.style.top = `${window.scrollY + rect.bottom + 6}px`;
+        }
+
+        function openDatePicker(input) {
+            activeDateInput = input;
+            visibleDate = startOfMonth(parseIsoDate(input.value) || new Date());
+            renderDatePicker();
+            positionDatePicker(input);
+            datePicker.hidden = false;
+        }
+
+        function closeDatePicker() {
+            datePicker.hidden = true;
+            activeDateInput = null;
+            wheelDeltaRemainder = 0;
+            window.clearTimeout(wheelResetTimer);
+        }
+
+        function selectDate(date) {
+            if (!activeDateInput) {
+                return;
+            }
+
+            activeDateInput.value = formatIsoDate(date);
+            activeDateInput.dispatchEvent(new Event("change", { bubbles: true }));
+            closeDatePicker();
+        }
+
+        function shiftVisibleMonth(amount) {
+            visibleDate = addMonths(visibleDate, amount);
+            renderDatePicker();
+        }
+
+        function renderDatePicker() {
+            datePicker.replaceChildren();
+
+            const header = document.createElement("div");
+            header.className = "date-picker-head";
+
+            const previousButton = document.createElement("button");
+            previousButton.className = "date-picker-nav";
+            previousButton.type = "button";
+            previousButton.textContent = "<";
+            previousButton.addEventListener("click", () => shiftVisibleMonth(-1));
+
+            const title = document.createElement("div");
+            title.className = "date-picker-selects";
+
+            const monthSelect = document.createElement("select");
+            monthSelect.setAttribute("aria-label", "Month");
+            monthNames.forEach((monthName, index) => {
+                const option = document.createElement("option");
+                option.value = String(index);
+                option.textContent = monthName;
+                monthSelect.appendChild(option);
+            });
+            monthSelect.value = String(visibleDate.getMonth());
+            monthSelect.addEventListener("change", () => {
+                visibleDate = new Date(visibleDate.getFullYear(), Number(monthSelect.value), 1);
+                renderDatePicker();
+            });
+
+            const yearInput = document.createElement("input");
+            yearInput.type = "number";
+            yearInput.min = "1900";
+            yearInput.max = "2200";
+            yearInput.step = "1";
+            yearInput.value = String(visibleDate.getFullYear());
+            yearInput.setAttribute("aria-label", "Year");
+            yearInput.addEventListener("change", () => {
+                const year = Number(yearInput.value);
+                if (!Number.isInteger(year) || year < 1) {
+                    yearInput.value = String(visibleDate.getFullYear());
+                    return;
+                }
+
+                visibleDate = new Date(year, visibleDate.getMonth(), 1);
+                renderDatePicker();
+            });
+
+            title.append(monthSelect, yearInput);
+
+            const todayButton = document.createElement("button");
+            todayButton.className = "date-picker-today";
+            todayButton.type = "button";
+            todayButton.textContent = "Today";
+            todayButton.addEventListener("click", () => selectDate(new Date()));
+
+            const nextButton = document.createElement("button");
+            nextButton.className = "date-picker-nav";
+            nextButton.type = "button";
+            nextButton.textContent = ">";
+            nextButton.addEventListener("click", () => shiftVisibleMonth(1));
+
+            header.append(previousButton, title, todayButton, nextButton);
+
+            const weekdays = document.createElement("div");
+            weekdays.className = "date-picker-weekdays";
+            for (const weekday of weekdayNames) {
+                const label = document.createElement("span");
+                label.textContent = weekday;
+                weekdays.appendChild(label);
+            }
+
+            const grid = document.createElement("div");
+            grid.className = "date-picker-grid";
+
+            const selectedDate = parseIsoDate(activeDateInput?.value);
+            const today = parseIsoDate(todayIsoDate());
+            const firstDayOffset = visibleDate.getDay();
+            const gridStartDate = new Date(visibleDate.getFullYear(), visibleDate.getMonth(), 1 - firstDayOffset);
+
+            for (let index = 0; index < 42; index++) {
+                const date = new Date(gridStartDate.getFullYear(), gridStartDate.getMonth(), gridStartDate.getDate() + index);
+                const dayButton = document.createElement("button");
+                dayButton.className = "date-picker-day";
+                dayButton.type = "button";
+                dayButton.textContent = String(date.getDate());
+
+                if (date.getMonth() !== visibleDate.getMonth()) {
+                    dayButton.classList.add("is-muted");
+                }
+
+                if (selectedDate && formatIsoDate(date) === formatIsoDate(selectedDate)) {
+                    dayButton.classList.add("is-selected");
+                }
+
+                if (today && formatIsoDate(date) === formatIsoDate(today)) {
+                    dayButton.classList.add("is-today");
+                }
+
+                dayButton.addEventListener("click", () => selectDate(date));
+                grid.appendChild(dayButton);
+            }
+
+            datePicker.append(header, weekdays, grid);
+        }
+
         function renderStatus(status) {
             activeStatus = status;
             activeRunState = status.status;
@@ -869,6 +1181,12 @@
                 style: "currency",
                 currency: "USD",
                 maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        function formatDecimal(value) {
+            return new Intl.NumberFormat(undefined, {
+                maximumFractionDigits: 4
             }).format(value);
         }
 
@@ -983,6 +1301,7 @@
                 resultsContent.hidden = true;
                 statisticsGrid.replaceChildren();
                 runtimeStatisticsGrid.replaceChildren();
+                indicatorValuesGrid.replaceChildren();
                 chartSummary.textContent = "";
                 equityChart.replaceChildren();
                 chartStartLabel.textContent = "";
@@ -997,8 +1316,20 @@
 
             renderMetricCards(statisticsGrid, results.statistics, "No summary statistics found.");
             renderMetricCards(runtimeStatisticsGrid, results.runtimeStatistics, "No runtime snapshot found.");
+            renderMetricCards(indicatorValuesGrid, formatIndicatorValues(results.indicatorValues), "Run a backtest with indicators enabled.");
             renderChart(results.equitySeries);
             renderOrders(results.recentOrders);
+        }
+
+        function formatIndicatorValues(indicatorValues) {
+            if (!indicatorValues || indicatorValues.length === 0) {
+                return [];
+            }
+
+            return indicatorValues.map(indicator => ({
+                label: indicator.label,
+                value: `${formatDecimal(Number(indicator.value))} · ${formatTimestamp(indicator.time)}`
+            }));
         }
 
         async function fetchJson(url, options) {
@@ -1112,6 +1443,61 @@
         stopButton.addEventListener("click", async () => {
             await runAction("stop", "/api/stop", { method: "POST" });
         });
+
+        for (const input of document.querySelectorAll(".date-input")) {
+            input.addEventListener("click", () => openDatePicker(input));
+            input.addEventListener("focus", () => openDatePicker(input));
+        }
+
+        datePicker.addEventListener("click", (event) => {
+            event.stopPropagation();
+        });
+
+        datePicker.addEventListener("wheel", (event) => {
+            event.preventDefault();
+            wheelDeltaRemainder += event.deltaY;
+            window.clearTimeout(wheelResetTimer);
+            wheelResetTimer = window.setTimeout(() => {
+                wheelDeltaRemainder = 0;
+            }, 220);
+
+            if (Math.abs(wheelDeltaRemainder) < monthWheelThreshold) {
+                return;
+            }
+
+            shiftVisibleMonth(wheelDeltaRemainder > 0 ? 1 : -1);
+            wheelDeltaRemainder = 0;
+        }, { passive: false });
+
+        document.addEventListener("click", (event) => {
+            if (datePicker.hidden) {
+                return;
+            }
+
+            if (datePicker.contains(event.target) || event.target === activeDateInput) {
+                return;
+            }
+
+            closeDatePicker();
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !datePicker.hidden) {
+                closeDatePicker();
+            }
+        });
+
+        window.addEventListener("resize", () => {
+            if (activeDateInput && !datePicker.hidden) {
+                positionDatePicker(activeDateInput);
+            }
+        });
+
+        window.addEventListener("scroll", () => {
+            if (activeDateInput && !datePicker.hidden) {
+                positionDatePicker(activeDateInput);
+            }
+        }, true);
 
         async function refreshStatusAndResults() {
             try {

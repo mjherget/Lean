@@ -13,6 +13,7 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
     {
         private const string StrategyEquityChartName = "Strategy Equity";
         private const string EquitySeriesName = "Equity";
+        private const string TechnicalIndicatorsChartName = "Technical Indicators";
         private readonly LeanBacktestPaths _paths;
 
         public LeanResultFileService(LeanBacktestPaths paths)
@@ -45,6 +46,11 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
             }
 
             var summary = JObject.Parse(File.ReadAllText(latestSummary.FullName));
+            var fullResultPath = Path.Combine(resultsDirectory, $"{resultId}.json");
+            var fullResult = File.Exists(fullResultPath)
+                ? JObject.Parse(File.ReadAllText(fullResultPath))
+                : null;
+
             return new BacktestResultsResponse
             {
                 HasResults = true,
@@ -55,6 +61,7 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
                 GeneratedAtUtc = latestSummary.LastWriteTimeUtc,
                 Statistics = ParseKeyValuePairs(GetObject(summary, "statistics")),
                 RuntimeStatistics = ParseKeyValuePairs(GetObject(summary, "runtimeStatistics")),
+                IndicatorValues = ParseIndicatorValues(summary, fullResult),
                 EquitySeries = ParseEquitySeries(summary),
                 RecentOrders = ParseRecentOrders(Path.Combine(resultsDirectory, $"{resultId}-order-events.json"))
             };
@@ -129,6 +136,86 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
             }
 
             return points;
+        }
+
+        private static IReadOnlyList<IndicatorValueResponse> ParseIndicatorValues(JObject summary, JObject fullResult)
+        {
+            var values = ParseIndicatorValues(summary);
+            return values.Count > 0 || fullResult == null
+                ? values
+                : ParseIndicatorValues(fullResult);
+        }
+
+        private static IReadOnlyList<IndicatorValueResponse> ParseIndicatorValues(JObject result)
+        {
+            var charts = GetObject(result, "charts");
+            var indicatorsChart = GetObject(charts, TechnicalIndicatorsChartName);
+            var seriesCollection = GetObject(indicatorsChart, "series");
+            if (seriesCollection == null)
+            {
+                return Array.Empty<IndicatorValueResponse>();
+            }
+
+            var values = new List<IndicatorValueResponse>();
+            foreach (var seriesProperty in seriesCollection.Properties())
+            {
+                var series = seriesProperty.Value as JObject;
+                var points = GetArray(series, "values");
+                if (points == null)
+                {
+                    continue;
+                }
+
+                for (var i = points.Count - 1; i >= 0; i--)
+                {
+                    if (!TryParseIndicatorPoint(points[i], out var time, out var value))
+                    {
+                        continue;
+                    }
+
+                    values.Add(new IndicatorValueResponse
+                    {
+                        Label = seriesProperty.Name,
+                        Time = DateTimeOffset.FromUnixTimeSeconds(time).UtcDateTime.ToString("O", CultureInfo.InvariantCulture),
+                        Value = value
+                    });
+                    break;
+                }
+            }
+
+            return values;
+        }
+
+        private static bool TryParseIndicatorPoint(JToken pointToken, out long time, out decimal value)
+        {
+            time = 0;
+            value = 0;
+
+            if (pointToken is JArray pointArray && pointArray.Count >= 2)
+            {
+                var parsedTime = pointArray[0]?.Value<long?>();
+                var parsedValue = pointArray[1]?.Value<decimal?>();
+                if (parsedTime.HasValue && parsedValue.HasValue)
+                {
+                    time = parsedTime.Value;
+                    value = parsedValue.Value;
+                    return true;
+                }
+            }
+
+            if (pointToken is JObject chartPoint)
+            {
+                var parsedTime = GetLong(chartPoint, "x");
+                var parsedValue = GetDecimal(chartPoint, "y");
+                if (parsedTime.HasValue && parsedValue.HasValue)
+                {
+                    time = parsedTime.Value;
+                    value = parsedValue.Value;
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool TryParseEquityPoint(JToken pointToken, out EquityPointResponse point)
