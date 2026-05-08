@@ -18,8 +18,45 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
             "start-date",
             "end-date",
             "cash",
-            "resolution"
+            "resolution",
+            "sma-enabled",
+            "sma-period",
+            "ema-enabled",
+            "ema-fast",
+            "ema-slow",
+            "rsi-enabled",
+            "rsi-period",
+            "macd-enabled",
+            "macd-fast",
+            "macd-slow",
+            "macd-signal",
+            "bb-enabled",
+            "bb-period",
+            "bb-standard-deviations"
         ];
+
+        private static readonly HashSet<string> NumericParameterKeys = new(StringComparer.Ordinal)
+        {
+            "cash",
+            "sma-period",
+            "ema-fast",
+            "ema-slow",
+            "rsi-period",
+            "macd-fast",
+            "macd-slow",
+            "macd-signal",
+            "bb-period",
+            "bb-standard-deviations"
+        };
+
+        private static readonly HashSet<string> BooleanParameterKeys = new(StringComparer.Ordinal)
+        {
+            "sma-enabled",
+            "ema-enabled",
+            "rsi-enabled",
+            "macd-enabled",
+            "bb-enabled"
+        };
 
         private static readonly Regex PropertyLineRegex = new(@"^(?<indent>\s*)""(?<key>[^""]+)""\s*:\s*(?<value>.+?)(?<comment>\s*//.*)?$", RegexOptions.Compiled);
 
@@ -73,7 +110,21 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
                 StartDate = NormalizeDate(parameters.TryGetValue("start-date", out var startDate) ? startDate : null, BacktestSettings.DefaultStartDate),
                 EndDate = NormalizeDate(parameters.TryGetValue("end-date", out var endDate) ? endDate : null, BacktestSettings.DefaultEndDate),
                 Cash = NormalizeCash(parameters.TryGetValue("cash", out var cash) ? cash : null),
-                Resolution = NormalizeResolution(parameters.TryGetValue("resolution", out var resolution) ? resolution : null)
+                Resolution = NormalizeResolution(parameters.TryGetValue("resolution", out var resolution) ? resolution : null),
+                SmaEnabled = NormalizeBoolean(parameters.TryGetValue("sma-enabled", out var smaEnabled) ? smaEnabled : null, BacktestSettings.DefaultSmaEnabled),
+                SmaPeriod = NormalizePositiveInteger(parameters.TryGetValue("sma-period", out var smaPeriod) ? smaPeriod : null, BacktestSettings.DefaultSmaPeriod),
+                EmaEnabled = NormalizeBoolean(parameters.TryGetValue("ema-enabled", out var emaEnabled) ? emaEnabled : null, BacktestSettings.DefaultEmaEnabled),
+                EmaFastPeriod = NormalizePositiveInteger(parameters.TryGetValue("ema-fast", out var emaFast) ? emaFast : null, BacktestSettings.DefaultEmaFastPeriod),
+                EmaSlowPeriod = NormalizePositiveInteger(parameters.TryGetValue("ema-slow", out var emaSlow) ? emaSlow : null, BacktestSettings.DefaultEmaSlowPeriod),
+                RsiEnabled = NormalizeBoolean(parameters.TryGetValue("rsi-enabled", out var rsiEnabled) ? rsiEnabled : null, BacktestSettings.DefaultRsiEnabled),
+                RsiPeriod = NormalizePositiveInteger(parameters.TryGetValue("rsi-period", out var rsiPeriod) ? rsiPeriod : null, BacktestSettings.DefaultRsiPeriod),
+                MacdEnabled = NormalizeBoolean(parameters.TryGetValue("macd-enabled", out var macdEnabled) ? macdEnabled : null, BacktestSettings.DefaultMacdEnabled),
+                MacdFastPeriod = NormalizePositiveInteger(parameters.TryGetValue("macd-fast", out var macdFast) ? macdFast : null, BacktestSettings.DefaultMacdFastPeriod),
+                MacdSlowPeriod = NormalizePositiveInteger(parameters.TryGetValue("macd-slow", out var macdSlow) ? macdSlow : null, BacktestSettings.DefaultMacdSlowPeriod),
+                MacdSignalPeriod = NormalizePositiveInteger(parameters.TryGetValue("macd-signal", out var macdSignal) ? macdSignal : null, BacktestSettings.DefaultMacdSignalPeriod),
+                BollingerBandsEnabled = NormalizeBoolean(parameters.TryGetValue("bb-enabled", out var bbEnabled) ? bbEnabled : null, BacktestSettings.DefaultBollingerBandsEnabled),
+                BollingerBandsPeriod = NormalizePositiveInteger(parameters.TryGetValue("bb-period", out var bbPeriod) ? bbPeriod : null, BacktestSettings.DefaultBollingerBandsPeriod),
+                BollingerBandsStandardDeviations = NormalizePositiveDecimal(parameters.TryGetValue("bb-standard-deviations", out var bbStandardDeviations) ? bbStandardDeviations : null, BacktestSettings.DefaultBollingerBandsStandardDeviations)
             };
         }
 
@@ -96,6 +147,25 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
             return decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var cash) && cash > 0
                 ? cash
                 : BacktestSettings.DefaultCash;
+        }
+
+        private static bool NormalizeBoolean(string value, bool fallback)
+        {
+            return bool.TryParse(value, out var parsed) ? parsed : fallback;
+        }
+
+        private static int NormalizePositiveInteger(string value, int fallback)
+        {
+            return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed > 0
+                ? parsed
+                : fallback;
+        }
+
+        private static decimal NormalizePositiveDecimal(string value, decimal fallback)
+        {
+            return decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed) && parsed > 0
+                ? parsed
+                : fallback;
         }
 
         private static string NormalizeResolution(string resolution)
@@ -323,9 +393,14 @@ namespace QuantConnect.Lean.BacktestSettingsUI.Services
 
         private static string FormatParameterValue(string key, string value)
         {
-            if (key == "cash")
+            if (NumericParameterKeys.Contains(key))
             {
                 return decimal.Parse(value, NumberStyles.Number, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+            }
+
+            if (BooleanParameterKeys.Contains(key))
+            {
+                return bool.Parse(value) ? "true" : "false";
             }
 
             return JsonConvert.ToString(value);

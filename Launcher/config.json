@@ -330,7 +330,19 @@
   "start-date": "2019-10-07",
   "end-date": "2026-05-05",
   "cash": 100000,
-  "resolution": "Daily"
+  "resolution": "Daily",
+  "sma-enabled": true,
+  "sma-period": 20,
+  "ema-enabled": true,
+  "rsi-enabled": true,
+  "rsi-period": 14,
+  "macd-enabled": true,
+  "macd-fast": 12,
+  "macd-slow": 26,
+  "macd-signal": 9,
+  "bb-enabled": true,
+  "bb-period": 20,
+  "bb-standard-deviations": 2
   },
 
   // specify supported languages when running regression tests

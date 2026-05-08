@@ -130,6 +130,88 @@
             border-color: var(--accent);
         }
 
+        .indicator-section {
+            display: grid;
+            gap: 8px;
+        }
+
+        .section-title {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.74rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .indicator-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .indicator-card {
+            display: grid;
+            gap: 6px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px;
+            background: #fffcf6;
+        }
+
+        .indicator-card.wide {
+            grid-column: 1 / -1;
+        }
+
+        .indicator-toggle {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--ink);
+            font-size: 0.85rem;
+            line-height: 1.1;
+        }
+
+        .indicator-toggle input {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--accent);
+        }
+
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+        }
+
+        .mini-grid.three {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .mini-field {
+            display: grid;
+            gap: 3px;
+        }
+
+        .mini-field label {
+            color: var(--muted);
+            font-size: 0.62rem;
+            letter-spacing: 0.06em;
+            line-height: 1;
+            text-transform: uppercase;
+        }
+
+        .mini-field input {
+            width: 100%;
+            min-height: 30px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 7px;
+            background: white;
+            color: var(--ink);
+            font: inherit;
+            font-size: 0.82rem;
+        }
+
         .algorithm {
             padding: 9px 10px;
             border-radius: 8px;
@@ -254,31 +336,33 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+            gap: 6px;
         }
 
         .stat-card {
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 9px 10px;
+            border-radius: 6px;
+            padding: 7px 9px;
             background: #fffcf6;
-            min-height: 58px;
+            min-height: 0;
         }
 
         .stat-card .label {
             display: block;
             color: var(--muted);
-            font-size: 0.66rem;
+            font-size: 0.62rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            margin-bottom: 5px;
+            line-height: 1.05;
+            margin-bottom: 3px;
         }
 
         .stat-card .value {
             display: block;
-            font-size: 0.88rem;
-            line-height: 1.2;
+            font-size: 0.8rem;
+            line-height: 1.12;
+            overflow-wrap: anywhere;
         }
 
         .chart-shell {
@@ -426,6 +510,88 @@
                     </div>
                 </div>
 
+                <section class="indicator-section" aria-labelledby="indicatorTitle">
+                    <h3 id="indicatorTitle" class="section-title">Technical Indicators</h3>
+                    <div class="indicator-grid">
+                        <div class="indicator-card">
+                            <label class="indicator-toggle">
+                                <input id="smaEnabled" name="smaEnabled" type="checkbox">
+                                <span>SMA</span>
+                            </label>
+                            <div class="mini-field">
+                                <label for="smaPeriod">Period</label>
+                                <input id="smaPeriod" name="smaPeriod" type="number" min="1" step="1">
+                            </div>
+                        </div>
+
+                        <div class="indicator-card">
+                            <label class="indicator-toggle">
+                                <input id="rsiEnabled" name="rsiEnabled" type="checkbox">
+                                <span>RSI</span>
+                            </label>
+                            <div class="mini-field">
+                                <label for="rsiPeriod">Period</label>
+                                <input id="rsiPeriod" name="rsiPeriod" type="number" min="1" step="1">
+                            </div>
+                        </div>
+
+                        <div class="indicator-card">
+                            <label class="indicator-toggle">
+                                <input id="emaEnabled" name="emaEnabled" type="checkbox">
+                                <span>EMA Cross</span>
+                            </label>
+                            <div class="mini-grid">
+                                <div class="mini-field">
+                                    <label for="emaFastPeriod">Fast</label>
+                                    <input id="emaFastPeriod" name="emaFastPeriod" type="number" min="1" step="1">
+                                </div>
+                                <div class="mini-field">
+                                    <label for="emaSlowPeriod">Slow</label>
+                                    <input id="emaSlowPeriod" name="emaSlowPeriod" type="number" min="1" step="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="indicator-card">
+                            <label class="indicator-toggle">
+                                <input id="bollingerBandsEnabled" name="bollingerBandsEnabled" type="checkbox">
+                                <span>Bollinger</span>
+                            </label>
+                            <div class="mini-grid">
+                                <div class="mini-field">
+                                    <label for="bollingerBandsPeriod">Period</label>
+                                    <input id="bollingerBandsPeriod" name="bollingerBandsPeriod" type="number" min="1" step="1">
+                                </div>
+                                <div class="mini-field">
+                                    <label for="bollingerBandsStandardDeviations">Std Dev</label>
+                                    <input id="bollingerBandsStandardDeviations" name="bollingerBandsStandardDeviations" type="number" min="0.1" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="indicator-card wide">
+                            <label class="indicator-toggle">
+                                <input id="macdEnabled" name="macdEnabled" type="checkbox">
+                                <span>MACD</span>
+                            </label>
+                            <div class="mini-grid three">
+                                <div class="mini-field">
+                                    <label for="macdFastPeriod">Fast</label>
+                                    <input id="macdFastPeriod" name="macdFastPeriod" type="number" min="1" step="1">
+                                </div>
+                                <div class="mini-field">
+                                    <label for="macdSlowPeriod">Slow</label>
+                                    <input id="macdSlowPeriod" name="macdSlowPeriod" type="number" min="1" step="1">
+                                </div>
+                                <div class="mini-field">
+                                    <label for="macdSignalPeriod">Signal</label>
+                                    <input id="macdSignalPeriod" name="macdSignalPeriod" type="number" min="1" step="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <div id="errorBox" class="errors"></div>
                 <div id="feedback" class="feedback"></div>
 
@@ -527,7 +693,21 @@
                 startDate: document.getElementById("startDate").value,
                 endDate: document.getElementById("endDate").value,
                 cash: document.getElementById("cash").value,
-                resolution: document.getElementById("resolution").value
+                resolution: document.getElementById("resolution").value,
+                smaEnabled: document.getElementById("smaEnabled").checked,
+                smaPeriod: document.getElementById("smaPeriod").value,
+                emaEnabled: document.getElementById("emaEnabled").checked,
+                emaFastPeriod: document.getElementById("emaFastPeriod").value,
+                emaSlowPeriod: document.getElementById("emaSlowPeriod").value,
+                rsiEnabled: document.getElementById("rsiEnabled").checked,
+                rsiPeriod: document.getElementById("rsiPeriod").value,
+                macdEnabled: document.getElementById("macdEnabled").checked,
+                macdFastPeriod: document.getElementById("macdFastPeriod").value,
+                macdSlowPeriod: document.getElementById("macdSlowPeriod").value,
+                macdSignalPeriod: document.getElementById("macdSignalPeriod").value,
+                bollingerBandsEnabled: document.getElementById("bollingerBandsEnabled").checked,
+                bollingerBandsPeriod: document.getElementById("bollingerBandsPeriod").value,
+                bollingerBandsStandardDeviations: document.getElementById("bollingerBandsStandardDeviations").value
             };
         }
 
@@ -584,6 +764,20 @@
             document.getElementById("endDate").value = settings.endDate;
             document.getElementById("cash").value = settings.cash;
             document.getElementById("resolution").value = settings.resolution;
+            document.getElementById("smaEnabled").checked = settings.smaEnabled;
+            document.getElementById("smaPeriod").value = settings.smaPeriod;
+            document.getElementById("emaEnabled").checked = settings.emaEnabled;
+            document.getElementById("emaFastPeriod").value = settings.emaFastPeriod;
+            document.getElementById("emaSlowPeriod").value = settings.emaSlowPeriod;
+            document.getElementById("rsiEnabled").checked = settings.rsiEnabled;
+            document.getElementById("rsiPeriod").value = settings.rsiPeriod;
+            document.getElementById("macdEnabled").checked = settings.macdEnabled;
+            document.getElementById("macdFastPeriod").value = settings.macdFastPeriod;
+            document.getElementById("macdSlowPeriod").value = settings.macdSlowPeriod;
+            document.getElementById("macdSignalPeriod").value = settings.macdSignalPeriod;
+            document.getElementById("bollingerBandsEnabled").checked = settings.bollingerBandsEnabled;
+            document.getElementById("bollingerBandsPeriod").value = settings.bollingerBandsPeriod;
+            document.getElementById("bollingerBandsStandardDeviations").value = settings.bollingerBandsStandardDeviations;
         }
 
         function renderStatus(status) {
